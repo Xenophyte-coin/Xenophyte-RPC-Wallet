@@ -1,7 +1,7 @@
 # Xenophyte-RPC-Wallet
 <h2>Xenophyte RPC Wallet specialy made for exchanges, web wallet.</h2>
 
-**RPC Wallet tool use the Token Network system described on the whitepaper: https://xenophyte.com/document/Xenophyte_Whitepaper_EN.pdf**
+**RPC Wallet tool use the Token Network system described on the whitepaper: https://xenophyte.com/document/xenophyte-Whitepaper-EN.pdf**
 
 To get more explanations, please refer to our Wiki pages: https://github.com/Xenophyte/Xenophyte-RPC-Wallet/wiki
 
