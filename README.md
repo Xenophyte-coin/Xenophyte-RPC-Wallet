@@ -3,7 +3,7 @@
 
 **RPC Wallet tool use the Token Network system described on the whitepaper: https://xenophyte.com/document/xenophyte-Whitepaper-EN.pdf**
 
-To get more explanations, please refer to our Wiki pages: https://github.com/Xenophyte/Xenophyte-RPC-Wallet/wiki
+To get more explanations, please refer to our Wiki pages: https://github.com/Xenophyte-coin/Xenophyte-RPC-Wallet/wiki
 
 Features:
 
