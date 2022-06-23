@@ -52,6 +52,12 @@ namespace Xenophyte_Rpc_Wallet
                     ClassConsole.ConsoleWriteLine("Please write your rpc wallet password for decrypt your databases of wallet (Input keys are hidden): ", ClassConsoleColorEnumeration.IndexConsoleYellowLog, LogLevel);
                     ClassRpcDatabase.SetRpcDatabasePassword(ClassUtility.GetHiddenConsoleInput());
                 }
+
+
+                ClassConsole.ConsoleWriteLine("Please write your trading key if you are a listed exchange", ClassConsoleColorEnumeration.IndexConsoleRedLog, LogLevel);
+                ClassConsole.ConsoleWriteLine("(Input keys are hidden):", ClassConsoleColorEnumeration.IndexConsoleRedLog, LogLevel);
+                ClassRpcDatabase.TradingKey = ClassUtility.GetHiddenConsoleInput();
+
                 ClassConsole.ConsoleWriteLine("RPC Wallet Database loading..", ClassConsoleColorEnumeration.IndexConsoleYellowLog, LogLevel);
                 while (!ClassRpcDatabase.LoadRpcDatabaseFile())
                 {

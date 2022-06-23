@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Xenophyte_Connector_All.RPC;
 using Xenophyte_Connector_All.Utils;
 using Xenophyte_Rpc_Wallet.ConsoleObject;
+using Xenophyte_Rpc_Wallet.Database;
 using Xenophyte_Rpc_Wallet.Wallet;
 
 namespace Xenophyte_Rpc_Wallet.API
@@ -34,6 +35,7 @@ namespace Xenophyte_Rpc_Wallet.API
         public string TaskWalletFee = "0";
         public string TaskWalletAnonymity = "0";
         public string TaskWalletDst = string.Empty;
+        public string TaskTradingKey = string.Empty;
         public string TaskResult = string.Empty;
     }
 
@@ -77,7 +79,7 @@ namespace Xenophyte_Rpc_Wallet.API
                                                     {
                                                         case ClassApiTaskType.API_TASK_TYPE_TRANSACTION:
                                                             bool anonymous = taskScheduled.Value.TaskWalletAnonymity == "1";
-                                                            string result = await ClassWalletUpdater.ProceedTransactionTokenRequestAsync(taskScheduled.Value.TaskWalletSrc, taskScheduled.Value.TaskWalletAmount, taskScheduled.Value.TaskWalletFee, taskScheduled.Value.TaskWalletDst, anonymous);
+                                                            string result = await ClassWalletUpdater.ProceedTransactionTokenRequestAsync(taskScheduled.Value.TaskWalletSrc, taskScheduled.Value.TaskWalletAmount, taskScheduled.Value.TaskWalletFee, taskScheduled.Value.TaskWalletDst, anonymous, ClassRpcDatabase.TradingKey);
                                                             var splitResult = result.Split(new[] { "|" }, StringSplitOptions.None);
                                                             if (splitResult[0] == ClassRpcWalletCommand.SendTokenTransactionConfirmed)
                                                             {
@@ -127,6 +129,7 @@ namespace Xenophyte_Rpc_Wallet.API
                         }
                         await Task.Delay(1000);
                     }
+                
                 }, _taskApiSchedulerCancellationSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Current).ConfigureAwait(false);
             }
             catch(Exception error)
@@ -194,9 +197,8 @@ namespace Xenophyte_Rpc_Wallet.API
                         DictionaryApiTaskScheduled.Add(randomIdentificationHash, new ClassApiTask() { TaskDate = dateScheduled, TaskType = apiTaskType, TaskStatus = ClassApiTaskStatus.API_TASK_STATUS_PENDING, TaskWalletAmount = amount, TaskWalletFee = fee, TaskWalletAnonymity = anonymous, TaskWalletSrc = walletSrc, TaskWalletDst = walletDst, TaskResult = string.Empty });
                         long startTaskScheduled = dateScheduled - DateTimeOffset.Now.ToUnixTimeSeconds();
                         if (startTaskScheduled < 0)
-                        {
                             startTaskScheduled = 0;
-                        }
+                        
                         ClassConsole.ConsoleWriteLine("API Task Scheduler - insert a new task scheduled | Task Hash ID: " + randomIdentificationHash + " , Task Wallet Src: " + walletSrc + " , Task amount: " + amount + " , Task fee: " + fee + " , Task Anonymous: " + anonymous + " Task wallet dst: " + walletDst + " executed in " + startTaskScheduled + " second(s).", ClassConsoleColorEnumeration.IndexConsoleYellowLog, ClassConsoleLogLevelEnumeration.LogLevelApi);
                         return new Tuple<bool, string>(true, randomIdentificationHash);
                     }

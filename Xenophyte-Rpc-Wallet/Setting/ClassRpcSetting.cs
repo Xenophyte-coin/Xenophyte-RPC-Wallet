@@ -255,13 +255,10 @@ namespace Xenophyte_Rpc_Wallet.Setting
                                                     {
                                                         case ClassRpcSettingEnumeration.SettingEnableBackupWalletSystem:
                                                             if (splitLine[1].ToLower() == "y" || splitLine[1].ToLower() == "true")
-                                                            {
                                                                 WalletEnableBackupSystem = true;
-                                                            }
                                                             else
-                                                            {
                                                                 WalletEnableBackupSystem = false;
-                                                            }
+                                                            
                                                             break;
                                                         case ClassRpcSettingEnumeration.SettingIntervalBackupWalletSystem:
                                                             if (int.TryParse(splitLine[1], out var intervalBackupSystem))
@@ -275,35 +272,25 @@ namespace Xenophyte_Rpc_Wallet.Setting
                                                             break;
                                                         case ClassRpcSettingEnumeration.SettingEnableBackupWalletAutoRemoveSystem:
                                                             if (splitLine[1].ToLower() == "y" || splitLine[1].ToLower() == "true")
-                                                            {
                                                                 WalletEnableAutoRemoveBackupSystem = true;
-                                                            }
                                                             else
-                                                            {
                                                                 WalletEnableAutoRemoveBackupSystem = false;
-                                                            }
+                                                            
                                                             containUpdate = true;
                                                             break;
                                                         case ClassRpcSettingEnumeration.SettingWalletBackupLapsingTimeLimit:
                                                             if (int.TryParse(splitLine[1], out var laspingTimeLimit))
-                                                            {
                                                                 WalletBackupLapsingTimeLimit = laspingTimeLimit;
-                                                            }
                                                             else
-                                                            {
                                                                 Console.WriteLine("Error on config line: " + splitLine[0] + " on line:" + numberOfLines + " | Exception: " + splitLine[1] + ", use default lapsing timelimit: " + WalletBackupLapsingTimeLimit);
-                                                            }
+                                                            
                                                             containUpdate = true;
                                                             break;
                                                         case ClassRpcSettingEnumeration.SettingApiIpBindSetting:
                                                             if (IPAddress.TryParse(splitLine[1], out var ipAddress))
-                                                            {
                                                                 RpcWalletApiIpBind = splitLine[1];
-                                                            }
                                                             else
-                                                            {
                                                                 Console.WriteLine("Error on config line: " + splitLine[0] + " on line:" + numberOfLines + " | Exception: " + splitLine[1] + " is not an IP.");
-                                                            }
                                                             break;
                                                         case ClassRpcSettingEnumeration.SettingApiPortSetting:
                                                             if (splitLine.Length > 1)
@@ -316,9 +303,7 @@ namespace Xenophyte_Rpc_Wallet.Setting
                                                                         Console.WriteLine("Use default port 8000");
                                                                     }
                                                                     else
-                                                                    {
                                                                         RpcWalletApiPort = rpcApiPort;
-                                                                    }
                                                                 }
                                                                 else
                                                                 {
@@ -327,9 +312,7 @@ namespace Xenophyte_Rpc_Wallet.Setting
                                                                 }
                                                             }
                                                             else
-                                                            {
                                                                 Console.WriteLine("Error on line: " + ClassRpcSettingEnumeration.SettingApiPortSetting + ", use default port: " + RpcWalletApiPort);
-                                                            }
                                                             break;
                                                         case ClassRpcSettingEnumeration.SettingApiWhitelist:
                                                             if (splitLine.Length > 1)

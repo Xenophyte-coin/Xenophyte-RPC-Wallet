@@ -36,9 +36,7 @@ namespace Xenophyte_Rpc_Wallet.Database
             try
             {
                 if (!File.Exists(ClassUtility.ConvertPath(AppDomain.CurrentDomain.BaseDirectory + SyncDatabaseFile)))
-                {
                     File.Create(ClassUtility.ConvertPath(AppDomain.CurrentDomain.BaseDirectory + SyncDatabaseFile)).Close();
-                }
                 else
                 {
                     using (FileStream fs = File.Open(ClassUtility.ConvertPath(AppDomain.CurrentDomain.BaseDirectory + SyncDatabaseFile), FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
@@ -62,17 +60,13 @@ namespace Xenophyte_Rpc_Wallet.Database
 
                                             var splitTransaction = transaction.Split(new[] { "#" }, StringSplitOptions.None);
                                             if (splitTransaction[0] == ClassSyncDatabaseEnumeration.DatabaseAnonymousTransactionMode)
-                                            {
                                                 ClassRpcDatabase.RpcDatabaseContent[walletAddress].InsertWalletTransactionSync(transaction, true, false);
-                                            }
                                             else
-                                            {
                                                 ClassRpcDatabase.RpcDatabaseContent[walletAddress].InsertWalletTransactionSync(transaction, false, false);
-                                            }
+
                                             if (!DatabaseTransactionSync.ContainsKey(transaction))
-                                            {
                                                 DatabaseTransactionSync.Add(transaction, long.Parse(splitTransaction[7]));
-                                            }
+
                                             _totalTransactionRead++;
                                         }
                                     }
@@ -110,9 +104,8 @@ namespace Xenophyte_Rpc_Wallet.Database
                         string transactionTmp = transaction + "#" + walletAddress;
                         var splitTransaction = transactionTmp.Split(new[] { "#" }, StringSplitOptions.None);
                         if (!DatabaseTransactionSync.ContainsKey(transactionTmp))
-                        {
                             DatabaseTransactionSync.Add(transactionTmp, long.Parse(splitTransaction[7]));
-                        }
+
                         transaction = ClassAlgo.GetEncryptedResultManual(ClassAlgoEnumeration.Rijndael, transaction, walletAddress + walletPublicKey, ClassWalletNetworkSetting.KeySize);
                         string transactionLine = ClassSyncDatabaseEnumeration.DatabaseSyncStartLine + walletAddress + "|" + transaction;
                         _syncDatabaseStreamWriter.WriteLine(transactionLine);

@@ -197,9 +197,8 @@ namespace Xenophyte_Rpc_Wallet.Wallet
                 {
                     _walletListOfTransaction.Add(transactionHash, transaction);
                     if (save)
-                    {
                         ClassSyncDatabase.InsertTransactionToSyncDatabaseAsync(_walletAddress, _walletPublicKey, transaction);
-                    }
+
                     return true;
                 }
             }
@@ -210,9 +209,8 @@ namespace Xenophyte_Rpc_Wallet.Wallet
                 {
                     _walletListOfAnonymousTransaction.Add(transactionHash, transaction);
                     if (save)
-                    {
                         ClassSyncDatabase.InsertTransactionToSyncDatabaseAsync(_walletAddress, _walletPublicKey, transaction);
-                    }
+
                     return true;
                 }
             }
@@ -351,9 +349,8 @@ namespace Xenophyte_Rpc_Wallet.Wallet
         public string GetWalletTransactionSyncByIndex(int index)
         {
             if (_walletListOfTransaction.Count > index)
-            {
                 return _walletListOfTransaction.ElementAt(index).Value;
-            }
+
             return null;
         }
 
@@ -368,9 +365,8 @@ namespace Xenophyte_Rpc_Wallet.Wallet
         {
 
             if (_walletListOfAnonymousTransaction.Count > index)
-            {
                 return _walletListOfAnonymousTransaction.ElementAt(index).Value;
-            }
+
             return null;
         }
 
@@ -388,9 +384,8 @@ namespace Xenophyte_Rpc_Wallet.Wallet
                 foreach(var transaction in _walletListOfTransaction.ToArray())
                 {
                     if (transaction.Key == transactionHash)
-                    {
                         return new Tuple<int, string>(counter, transaction.Value);
-                    }
+
                     counter++;
                 }
             }
@@ -400,9 +395,8 @@ namespace Xenophyte_Rpc_Wallet.Wallet
                 foreach (var transaction in _walletListOfAnonymousTransaction.ToArray())
                 {
                     if (transaction.Key == transactionHash)
-                    {
                         return new Tuple<int, string>(counter, transaction.Value);
-                    }
+                    
                     counter++;
                 }
             }

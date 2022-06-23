@@ -31,6 +31,7 @@ namespace Xenophyte_Rpc_Wallet.Database
         public static bool InSave;
         public static bool InSaveBackup;
         public static bool PasswordIsSetByArgument;
+        public static string TradingKey;
         private static CancellationTokenSource _cancellationTokenTaskBackupDatatabase;
 
         /// <summary>

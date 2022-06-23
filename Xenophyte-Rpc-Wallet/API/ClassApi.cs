@@ -517,9 +517,8 @@ namespace Xenophyte_Rpc_Wallet.API
 
                                         string data = JsonConvert.SerializeObject(walletBalanceJsonObject);
                                         if (ClassRpcSetting.RpcWalletApiKeyRequestEncryption != string.Empty)
-                                        {
                                             data = ClassAlgo.GetEncryptedResultManual(ClassAlgoEnumeration.Rijndael, data, ClassRpcSetting.RpcWalletApiKeyRequestEncryption, ClassWalletNetworkSetting.KeySize);
-                                        }
+
                                         StringBuilder builder = new StringBuilder();
                                         builder.AppendLine(@"HTTP/1.1 200 OK");
                                         builder.AppendLine(@"Content-Type: text/plain");
@@ -675,9 +674,8 @@ namespace Xenophyte_Rpc_Wallet.API
                                 builder.Clear();
                             }
                             else
-                            {
                                 await BuildAndSendHttpPacketAsync(ClassApiEnumeration.WalletNotExist);
-                            }
+
                             break;
                         case ClassApiEnumeration.SendTransactionByWalletAddress:
                             if (splitPacket.Length >= 6)
@@ -687,9 +685,11 @@ namespace Xenophyte_Rpc_Wallet.API
                                 var fee = splitPacket[3];
                                 var anonymousOption = splitPacket[4];
                                 var walletAddressTarget = splitPacket[5];
+                                var tradingKey = !string.IsNullOrEmpty(ClassRpcDatabase.TradingKey) ? ClassRpcDatabase.TradingKey : "";
+
                                 if (anonymousOption == "1")
                                 {
-                                    string result = await ClassWalletUpdater.ProceedTransactionTokenRequestAsync(walletAddressSource, amount, fee, walletAddressTarget, true);
+                                    string result = await ClassWalletUpdater.ProceedTransactionTokenRequestAsync(walletAddressSource, amount, fee, walletAddressTarget, true, tradingKey);
                                     var splitResult = result.Split(new[] { "|" }, StringSplitOptions.None);
                                     var sendTransactionJsonObject = new ClassApiJsonSendTransaction()
                                     {
@@ -701,9 +701,8 @@ namespace Xenophyte_Rpc_Wallet.API
 
                                     string data = JsonConvert.SerializeObject(sendTransactionJsonObject);
                                     if (ClassRpcSetting.RpcWalletApiKeyRequestEncryption != string.Empty)
-                                    {
                                         data = ClassAlgo.GetEncryptedResultManual(ClassAlgoEnumeration.Rijndael, data, ClassRpcSetting.RpcWalletApiKeyRequestEncryption, ClassWalletNetworkSetting.KeySize);
-                                    }
+                                    
                                     StringBuilder builder = new StringBuilder();
                                     builder.AppendLine(@"HTTP/1.1 200 OK");
                                     builder.AppendLine(@"Content-Type: text/plain");
@@ -716,31 +715,35 @@ namespace Xenophyte_Rpc_Wallet.API
                                 }
                                 else
                                 {
-                                    string result = await ClassWalletUpdater.ProceedTransactionTokenRequestAsync(walletAddressSource, amount, fee, walletAddressTarget, false);
-                                    var splitResult = result.Split(new[] { "|" }, StringSplitOptions.None);
-
-                                    var sendTransactionJsonObject = new ClassApiJsonSendTransaction()
+                                    if (ClassRpcDatabase.RpcDatabaseContent.ContainsKey(walletAddressSource))
                                     {
-                                        result = splitResult[0],
-                                        hash = splitResult[1].ToLower(),
-                                        wallet_balance = decimal.Parse(ClassRpcDatabase.RpcDatabaseContent[walletAddressSource].GetWalletBalance(), NumberStyles.Currency, Program.GlobalCultureInfo),
-                                        wallet_pending_balance = decimal.Parse(ClassRpcDatabase.RpcDatabaseContent[walletAddressSource].GetWalletPendingBalance(), NumberStyles.Currency, Program.GlobalCultureInfo),
-                                    };
 
-                                    string data = JsonConvert.SerializeObject(sendTransactionJsonObject);
-                                    if (ClassRpcSetting.RpcWalletApiKeyRequestEncryption != string.Empty)
-                                    {
-                                        data = ClassAlgo.GetEncryptedResultManual(ClassAlgoEnumeration.Rijndael, data, ClassRpcSetting.RpcWalletApiKeyRequestEncryption, ClassWalletNetworkSetting.KeySize);
+                                        string result = await ClassWalletUpdater.ProceedTransactionTokenRequestAsync(walletAddressSource, amount, fee, walletAddressTarget, false, tradingKey);
+                                        var splitResult = result.Split(new[] { "|" }, StringSplitOptions.None);
+
+                                        var sendTransactionJsonObject = new ClassApiJsonSendTransaction()
+                                        {
+                                            result = splitResult[0],
+                                            hash = splitResult[1].ToLower(),
+                                            wallet_balance = decimal.Parse(ClassRpcDatabase.RpcDatabaseContent[walletAddressSource].GetWalletBalance(), NumberStyles.Currency, Program.GlobalCultureInfo),
+                                            wallet_pending_balance = decimal.Parse(ClassRpcDatabase.RpcDatabaseContent[walletAddressSource].GetWalletPendingBalance(), NumberStyles.Currency, Program.GlobalCultureInfo),
+                                        };
+
+                                        string data = JsonConvert.SerializeObject(sendTransactionJsonObject);
+                                        if (ClassRpcSetting.RpcWalletApiKeyRequestEncryption != string.Empty)
+                                            data = ClassAlgo.GetEncryptedResultManual(ClassAlgoEnumeration.Rijndael, data, ClassRpcSetting.RpcWalletApiKeyRequestEncryption, ClassWalletNetworkSetting.KeySize);
+                                       
+                                        StringBuilder builder = new StringBuilder();
+                                        builder.AppendLine(@"HTTP/1.1 200 OK");
+                                        builder.AppendLine(@"Content-Type: text/plain");
+                                        builder.AppendLine(@"Content-Length: " + data.Length);
+                                        builder.AppendLine(@"Access-Control-Allow-Origin: *");
+                                        builder.AppendLine(@"");
+                                        builder.AppendLine(@"" + data);
+                                        await SendPacketAsync(builder.ToString());
+                                        builder.Clear();
                                     }
-                                    StringBuilder builder = new StringBuilder();
-                                    builder.AppendLine(@"HTTP/1.1 200 OK");
-                                    builder.AppendLine(@"Content-Type: text/plain");
-                                    builder.AppendLine(@"Content-Length: " + data.Length);
-                                    builder.AppendLine(@"Access-Control-Allow-Origin: *");
-                                    builder.AppendLine(@"");
-                                    builder.AppendLine(@"" + data);
-                                    await SendPacketAsync(builder.ToString());
-                                    builder.Clear();
+
                                 }
                             }
                             else

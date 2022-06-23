@@ -27,14 +27,12 @@ namespace Xenophyte_Rpc_Wallet.Remote
             string realTransactionInformationReceiverSide = splitTransaction[8];
 
             string realTransactionInformationDecrypted = "NULL";
+
             if (type == "SEND")
-            {
                 realTransactionInformationDecrypted = ClassAlgo.GetDecryptedResultManual(ClassAlgoEnumeration.Rijndael, realTransactionInformationSenderSide, walletAddress + walletPublicKey, ClassWalletNetworkSetting.KeySize);
-            }
             else if (type == "RECV")
-            {
                 realTransactionInformationDecrypted = ClassAlgo.GetDecryptedResultManual(ClassAlgoEnumeration.Rijndael, realTransactionInformationReceiverSide, walletAddress + walletPublicKey, ClassWalletNetworkSetting.KeySize);
-            }
+            
             if (realTransactionInformationDecrypted != "NULL" && realTransactionInformationDecrypted != ClassAlgoErrorEnumeration.AlgoError)
             {
                 var splitDecryptedTransactionInformation = realTransactionInformationDecrypted.Split(new[] { "-" }, StringSplitOptions.None);

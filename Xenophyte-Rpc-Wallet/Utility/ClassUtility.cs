@@ -23,11 +23,7 @@ namespace Xenophyte_Rpc_Wallet.Utility
 
         public static string ConvertPath(string path)
         {
-            if (Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX)
-            {
-                path = path.Replace("\\", "/");
-            }
-            return path;
+            return Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX ? path.Replace("\\", "/") : path;
         }
 
         /// <summary>
@@ -77,8 +73,7 @@ namespace Xenophyte_Rpc_Wallet.Utility
         /// <returns></returns>
         public static bool CheckSpecialCharacters(string word)
         {
-            var regx = new Regex("[^a-zA-Z0-9_.]");
-            return regx.IsMatch(word);
+            return new Regex("[^a-zA-Z0-9_.]").IsMatch(word);
         }
 
         /// <summary>
@@ -90,11 +85,9 @@ namespace Xenophyte_Rpc_Wallet.Utility
         /// <returns></returns>
         public static string GetStringBetween(string str, string firstString, string lastString)
         {
-            string FinalString;
             int Pos1 = str.IndexOf(firstString) + firstString.Length;
             int Pos2 = str.IndexOf(lastString);
-            FinalString = str.Substring(Pos1, Pos2 - Pos1);
-            return FinalString;
+            return str.Substring(Pos1, Pos2 - Pos1);
         }
 
         /// <summary>
@@ -106,8 +99,6 @@ namespace Xenophyte_Rpc_Wallet.Utility
         {
             return GetStringBetween(packet, "{", "}");
         }
-
-
 
         /// <summary>
         /// Make a new genesis key for dynamic encryption.
@@ -122,21 +113,15 @@ namespace Xenophyte_Rpc_Wallet.Utility
                 {
                     var randomUpper = ClassUtils.GetRandomBetween(0, 100);
                     if (randomUpper <= 30)
-                    {
                         walletPassword += ListOfCharacters[ClassUtils.GetRandomBetween(0, ListOfCharacters.Count - 1)];
-                    }
+
                     else if (randomUpper > 30 && randomUpper <= 50)
-                    {
                         walletPassword += ListOfCharacters[ClassUtils.GetRandomBetween(0, ListOfCharacters.Count - 1)].ToUpper();
-                    }
                     else if (randomUpper > 50 && randomUpper <= 70)
-                    {
                         walletPassword += ListOfSpecialCharacters[ClassUtils.GetRandomBetween(0, ListOfSpecialCharacters.Count - 1)];
-                    }
                     else
-                    {
                         walletPassword += ListOfNumbers[ClassUtils.GetRandomBetween(0, ListOfNumbers.Count - 1)];
-                    }
+
                 }
             }
             return walletPassword;
