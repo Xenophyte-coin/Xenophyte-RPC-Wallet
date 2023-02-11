@@ -16,6 +16,7 @@ using Xenophyte_Connector_All.Wallet;
 using Xenophyte_Rpc_Wallet.ConsoleObject;
 using Xenophyte_Rpc_Wallet.Database;
 using Xenophyte_Rpc_Wallet.Setting;
+using System.Net.Sockets;
 
 namespace Xenophyte_Rpc_Wallet.Wallet
 {
@@ -25,7 +26,7 @@ namespace Xenophyte_Rpc_Wallet.Wallet
         private const string RpcTokenNetworkNotExist = "not_exist";
         private const string RpcTokenNetworkWalletAddressNotExist = "wallet_address_not_exist";
         private const string RpcTokenNetworkWalletBusyOnUpdate = "WALLET-BUSY-ON-UPDATE";
-        private static Dictionary<string, int> _listOfSeedNodesSpeed = new Dictionary<string, int>();
+        private static Dictionary<IPAddress, int> _listOfSeedNodesSpeed = new Dictionary<IPAddress, int>();
 
         /// <summary>
         /// Enable auto update wallet system.
@@ -47,7 +48,7 @@ namespace Xenophyte_Rpc_Wallet.Wallet
                     {
                         if (ClassRpcDatabase.RpcDatabaseContent.Count > 0)
                         {
-                            string getSeedNodeRandom = string.Empty;
+                            IPAddress getSeedNodeRandom = null;
                             bool seedNodeSelected = false;
                             if (ClassConnectorSetting.SeedNodeIp.Count > 1)
                             {
@@ -116,7 +117,7 @@ namespace Xenophyte_Rpc_Wallet.Wallet
         /// </summary>
         /// <param name="getSeedNodeRandom"></param>
         /// <param name="walletAddress"></param>
-        private static void UpdateWalletTarget(string getSeedNodeRandom, string walletAddress)
+        private static void UpdateWalletTarget(IPAddress getSeedNodeRandom, string walletAddress)
         {
             ThreadPool.QueueUserWorkItem(async delegate
             {
@@ -142,10 +143,14 @@ namespace Xenophyte_Rpc_Wallet.Wallet
 #endif
                     }
                 }
+#if DEBUG
                 catch (Exception error)
                 {
-#if DEBUG
-                    Console.WriteLine("Error on update wallet: " + walletAddress + " exception: " + error.Message);
+
+                   Console.WriteLine("Error on update wallet: " + walletAddress + " exception: " + error.Message);
+#else
+                catch
+                {
 #endif
                 }
 #if DEBUG
@@ -176,7 +181,7 @@ namespace Xenophyte_Rpc_Wallet.Wallet
         /// <returns></returns>
         public static async Task UpdateWallet(string walletAddress)
         {
-            string getSeedNodeRandom = string.Empty;
+            IPAddress getSeedNodeRandom = null;
             bool seedNodeSelected = false;
             foreach (var seedNode in GetSeedNodeSpeedList().ToArray())
             {
@@ -201,7 +206,7 @@ namespace Xenophyte_Rpc_Wallet.Wallet
         /// Get Seed Node list sorted by the faster to the slowest one.
         /// </summary>
         /// <returns></returns>
-        public static Dictionary<string, int> GetSeedNodeSpeedList()
+        public static Dictionary<IPAddress, int> GetSeedNodeSpeedList()
         {
             if (_listOfSeedNodesSpeed.Count == 0)
             {
@@ -233,7 +238,7 @@ namespace Xenophyte_Rpc_Wallet.Wallet
             else if (_listOfSeedNodesSpeed.Count != ClassConnectorSetting.SeedNodeIp.Count)
             {
                 ClassConsole.ConsoleWriteLine("New seed node(s) listed, update the list of seed nodes sorted by their ping time.", ClassConsoleColorEnumeration.IndexConsoleYellowLog);
-                var tmpListOfSeedNodesSpeed = new Dictionary<string, int>();
+                var tmpListOfSeedNodesSpeed = new Dictionary<IPAddress, int>();
                 foreach (var seedNode in ClassConnectorSetting.SeedNodeIp.ToArray())
                 {
 
@@ -271,11 +276,15 @@ namespace Xenophyte_Rpc_Wallet.Wallet
         /// <param name="getSeedNodeRandom"></param>
         /// <param name="walletAddress"></param>
         /// <returns></returns>
-        private static async Task<string> GetWalletTokenAsync(string getSeedNodeRandom, string walletAddress)
+        private static async Task<string> GetWalletTokenAsync(IPAddress getSeedNodeRandom, string walletAddress)
         {
-            string encryptedRequest = ClassRpcWalletCommand.TokenAsk + "|empty-token|" + (DateTimeOffset.Now.ToUnixTimeSeconds() + 1).ToString("F0");
+            string encryptedRequest = ClassRpcWalletCommand.TokenAsk + "|empty-token|" + (DateTimeOffset.Now.ToUnixTimeSeconds() + 1).ToString("F0") + "|"+ClassRpcDatabase.TradingKey;
             encryptedRequest = ClassAlgo.GetEncryptedResultManual(ClassAlgoEnumeration.Rijndael, encryptedRequest, walletAddress + ClassRpcDatabase.RpcDatabaseContent[walletAddress].GetWalletPublicKey() + ClassRpcDatabase.RpcDatabaseContent[walletAddress].GetWalletPassword(), ClassWalletNetworkSetting.KeySize);
-            string responseWallet = await ProceedTokenRequestHttpAsync("http://" + getSeedNodeRandom + ":" + ClassConnectorSetting.SeedNodeTokenPort + "/" + ClassConnectorSettingEnumeration.WalletTokenType + "|" + walletAddress + "|" + encryptedRequest);
+
+
+            string host = getSeedNodeRandom.AddressFamily == AddressFamily.InterNetworkV6 ? "[" + getSeedNodeRandom.ToString() + "]" : getSeedNodeRandom.ToString();
+            
+            string responseWallet = await ProceedTokenRequestHttpAsync("http://" + host + ":" + ClassConnectorSetting.SeedNodeTokenPort + "/" + ClassConnectorSettingEnumeration.WalletTokenType + "|" + walletAddress + "|" + encryptedRequest);
             //string responseWallet = await ProceedTokenRequestTcpAsync(getSeedNodeRandom, ClassConnectorSetting.SeedNodeTokenPort, ClassConnectorSettingEnumeration.WalletTokenType + "|" + walletAddress + "|" + encryptedRequest);
 
             try
@@ -322,7 +331,7 @@ namespace Xenophyte_Rpc_Wallet.Wallet
         /// </summary>
         /// <param name="getSeedNodeRandom"></param>
         /// <param name="walletAddress"></param>
-        public static async Task<bool> GetWalletBalanceTokenAsync(string getSeedNodeRandom, string walletAddress)
+        public static async Task<bool> GetWalletBalanceTokenAsync(IPAddress getSeedNodeRandom, string walletAddress)
         {
             string token = await GetWalletTokenAsync(getSeedNodeRandom, walletAddress);
             if (token != RpcTokenNetworkNotExist)
@@ -331,9 +340,13 @@ namespace Xenophyte_Rpc_Wallet.Wallet
                 {
                     token = ClassRpcDatabase.RpcDatabaseContent[walletAddress].GetWalletCurrentToken().Item2;
                     ClassRpcDatabase.RpcDatabaseContent[walletAddress].SetWalletCurrentToken(false, string.Empty);
-                    string encryptedRequest = ClassRpcWalletCommand.TokenAskBalance + "|" + token + "|" + (DateTimeOffset.Now.ToUnixTimeSeconds() + 1);
+                    string encryptedRequest = ClassRpcWalletCommand.TokenAskBalance + "|" + token + "|" + (DateTimeOffset.Now.ToUnixTimeSeconds() + 1) + "|" + ClassRpcDatabase.TradingKey;
                     encryptedRequest = ClassAlgo.GetEncryptedResultManual(ClassAlgoEnumeration.Rijndael, encryptedRequest, walletAddress + ClassRpcDatabase.RpcDatabaseContent[walletAddress].GetWalletPublicKey() + ClassRpcDatabase.RpcDatabaseContent[walletAddress].GetWalletPassword(), ClassWalletNetworkSetting.KeySize);
-                    string responseWallet = await ProceedTokenRequestHttpAsync("http://" + getSeedNodeRandom + ":" + ClassConnectorSetting.SeedNodeTokenPort + "/" + ClassConnectorSettingEnumeration.WalletTokenType + "|" + walletAddress + "|" + encryptedRequest);
+
+
+                    string host = getSeedNodeRandom.AddressFamily == AddressFamily.InterNetworkV6 ? "[" + getSeedNodeRandom.ToString() + "]" : getSeedNodeRandom.ToString();
+
+                    string responseWallet = await ProceedTokenRequestHttpAsync("http://" + host + ":" + ClassConnectorSetting.SeedNodeTokenPort + "/" + ClassConnectorSettingEnumeration.WalletTokenType + "|" + walletAddress + "|" + encryptedRequest);
 
                     try
                     {
@@ -393,7 +406,7 @@ namespace Xenophyte_Rpc_Wallet.Wallet
         /// <param name="fee"></param>
         /// <param name="anonymous"></param>
         /// <returns></returns>
-        private static async Task<string> SendWalletTransactionTokenAsync(string getSeedNodeRandom, string walletAddress, string walletAddressTarget, string amount, string fee, bool anonymous, string tradingKey)
+        private static async Task<string> SendWalletTransactionTokenAsync(IPAddress getSeedNodeRandom, string walletAddress, string walletAddressTarget, string amount, string fee, bool anonymous, string tradingKey)
         {
 
             string tokenWallet = await GetWalletTokenAsync(getSeedNodeRandom, walletAddress);
@@ -406,12 +419,15 @@ namespace Xenophyte_Rpc_Wallet.Wallet
 
                     string encryptedRequest;
                     if (anonymous)
-                        encryptedRequest = ClassRpcWalletCommand.TokenAskWalletSendTransaction + "|" + tokenWallet + "|" + walletAddressTarget + "|" + amount + "|" + fee + "|1|" + (DateTimeOffset.Now.ToUnixTimeSeconds() + 1).ToString("F0") + "|" + tradingKey;
+                        encryptedRequest = ClassRpcWalletCommand.TokenAskWalletSendTransaction + "|" + tokenWallet + "|" + walletAddressTarget + "|" + amount + "|" + fee + "|1|" + (DateTimeOffset.Now.ToUnixTimeSeconds() + 1).ToString("F0") + "|" + ClassRpcDatabase.TradingKey;
                     else
-                        encryptedRequest = ClassRpcWalletCommand.TokenAskWalletSendTransaction + "|" + tokenWallet + "|" + walletAddressTarget + "|" + amount + "|" + fee + "|0|" + (DateTimeOffset.Now.ToUnixTimeSeconds() + 1).ToString("F0") + "|" + tradingKey;
+                        encryptedRequest = ClassRpcWalletCommand.TokenAskWalletSendTransaction + "|" + tokenWallet + "|" + walletAddressTarget + "|" + amount + "|" + fee + "|0|" + (DateTimeOffset.Now.ToUnixTimeSeconds() + 1).ToString("F0") + "|" + ClassRpcDatabase.TradingKey;
                     
                     encryptedRequest = ClassAlgo.GetEncryptedResultManual(ClassAlgoEnumeration.Rijndael, encryptedRequest, walletAddress + ClassRpcDatabase.RpcDatabaseContent[walletAddress].GetWalletPublicKey() + ClassRpcDatabase.RpcDatabaseContent[walletAddress].GetWalletPassword(), ClassWalletNetworkSetting.KeySize);
-                    string responseWallet = await ProceedTokenRequestHttpAsync("http://" + getSeedNodeRandom + ":" + ClassConnectorSetting.SeedNodeTokenPort + "/" + ClassConnectorSettingEnumeration.WalletTokenType + "|" + walletAddress + "|" + encryptedRequest);
+
+                    string host = getSeedNodeRandom.AddressFamily == AddressFamily.InterNetworkV6 ? "[" + getSeedNodeRandom.ToString() + "]" : getSeedNodeRandom.ToString();
+
+                    string responseWallet = await ProceedTokenRequestHttpAsync("http://" + host + ":" + ClassConnectorSetting.SeedNodeTokenPort + "/" + ClassConnectorSettingEnumeration.WalletTokenType + "|" + walletAddress + "|" + encryptedRequest);
 
                     ClassRpcDatabase.RpcDatabaseContent[walletAddress].SetWalletOnUpdateStatus(false);
                     try
@@ -481,7 +497,7 @@ namespace Xenophyte_Rpc_Wallet.Wallet
         /// <param name="walletAddressTarget"></param>
         /// <param name="amount"></param>
         /// <returns></returns>
-        private static async Task<string> SendWalletTransferTokenAsync(string getSeedNodeRandom, string walletAddress, string walletAddressTarget, string amount)
+        private static async Task<string> SendWalletTransferTokenAsync(IPAddress getSeedNodeRandom, string walletAddress, string walletAddressTarget, string amount)
         {
             if (ClassRpcDatabase.RpcDatabaseContent.ContainsKey(walletAddressTarget))
             {
@@ -495,17 +511,18 @@ namespace Xenophyte_Rpc_Wallet.Wallet
 
                         string privateKeyTarget = ClassRpcDatabase.RpcDatabaseContent[walletAddressTarget].GetWalletPrivateKey(); 
                         if (privateKeyTarget.Contains("$"))
-                        {
                             privateKeyTarget = privateKeyTarget.Split(new[] { "$" }, StringSplitOptions.None)[0];
-                        }
+
                         string keyTargetRequest = walletAddressTarget + ClassRpcDatabase.RpcDatabaseContent[walletAddressTarget].GetWalletPublicKey() + ClassRpcDatabase.RpcDatabaseContent[walletAddressTarget].GetWalletPassword() + privateKeyTarget;
                         string encryptedTargetRequest = ClassAlgo.GetEncryptedResultManual(ClassAlgoEnumeration.Rijndael, amount, keyTargetRequest, ClassWalletNetworkSetting.KeySize);
 
 
-                        string encryptedRequest = ClassRpcWalletCommand.TokenAskWalletTransfer + "|" + tokenWallet + "|" + walletAddressTarget + "|" + encryptedTargetRequest + "|" + (DateTimeOffset.Now.ToUnixTimeSeconds() + 1).ToString("F0");
+                        string encryptedRequest = ClassRpcWalletCommand.TokenAskWalletTransfer + "|" + tokenWallet + "|" + walletAddressTarget + "|" + encryptedTargetRequest + "|" + (DateTimeOffset.Now.ToUnixTimeSeconds() + 1).ToString("F0") + "|" + ClassRpcDatabase.TradingKey;
                         encryptedRequest = ClassAlgo.GetEncryptedResultManual(ClassAlgoEnumeration.Rijndael, encryptedRequest, walletAddress + ClassRpcDatabase.RpcDatabaseContent[walletAddress].GetWalletPublicKey() + ClassRpcDatabase.RpcDatabaseContent[walletAddress].GetWalletPassword(), ClassWalletNetworkSetting.KeySize);
 
-                        string responseWallet = await ProceedTokenRequestHttpAsync("http://" + getSeedNodeRandom + ":" + ClassConnectorSetting.SeedNodeTokenPort + "/" + ClassConnectorSettingEnumeration.WalletTokenType + "|" + walletAddress + "|" + encryptedRequest);
+                        string host = getSeedNodeRandom.AddressFamily == AddressFamily.InterNetworkV6 ? "[" + getSeedNodeRandom.ToString() + "]" : getSeedNodeRandom.ToString();
+
+                        string responseWallet = await ProceedTokenRequestHttpAsync("http://" + host + ":" + ClassConnectorSetting.SeedNodeTokenPort + "/" + ClassConnectorSettingEnumeration.WalletTokenType + "|" + walletAddress + "|" + encryptedRequest);
 
                         ClassRpcDatabase.RpcDatabaseContent[walletAddress].SetWalletOnUpdateStatus(false);
                         var responseWalletJson = JObject.Parse(responseWallet);
@@ -625,7 +642,7 @@ namespace Xenophyte_Rpc_Wallet.Wallet
                     {
 
                         ClassRpcDatabase.RpcDatabaseContent[walletAddress].SetLastWalletUpdate(DateTimeOffset.Now.ToUnixTimeSeconds());
-                        string getSeedNodeRandom = string.Empty;
+                        IPAddress getSeedNodeRandom = null;
                         bool seedNodeSelected = false;
                         foreach (var seedNode in GetSeedNodeSpeedList().ToArray())
                         {
@@ -697,7 +714,7 @@ namespace Xenophyte_Rpc_Wallet.Wallet
                     if (balanceFromRequest <= balanceFromDatabase)
                     {
                         ClassRpcDatabase.RpcDatabaseContent[walletAddress].SetLastWalletUpdate(DateTimeOffset.Now.ToUnixTimeSeconds());
-                        string getSeedNodeRandom = string.Empty;
+                        IPAddress getSeedNodeRandom = null;
                         bool seedNodeSelected = false;
                         foreach (var seedNode in GetSeedNodeSpeedList().ToArray())
                         {

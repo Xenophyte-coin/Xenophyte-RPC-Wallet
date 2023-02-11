@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 // l'ensemble d'attributs suivant. Changez les valeurs de ces attributs pour modifier les informations
 // associées à un assembly.
 [assembly: AssemblyTitle("Xenophyte RPC Wallet")]
-[assembly: AssemblyDescription("Xenophyte RPC Wallet done for exchanges")]
+[assembly: AssemblyDescription("Xenophyte RPC Wallet done for exchanges or web wallet.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Xenophyte")]
 [assembly: AssemblyProduct("Xenophyte RPC Wallet")]
-[assembly: AssemblyCopyright("Copyright © Xenophyte Developer  2021")]
+[assembly: AssemblyCopyright("Copyright © Xenophyte Developer  2023")]
 [assembly: AssemblyTrademark("Xenophyte")]
 [assembly: AssemblyCulture("")]
 
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // Vous pouvez spécifier toutes les valeurs ou indiquer les numéros de build et de révision par défaut
 // en utilisant '*', comme indiqué ci-dessous :
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("0.0.2.8")]
-[assembly: AssemblyFileVersion("0.0.2.8")]
+[assembly: AssemblyVersion("0.0.2.9")]
+[assembly: AssemblyFileVersion("0.0.2.9")]

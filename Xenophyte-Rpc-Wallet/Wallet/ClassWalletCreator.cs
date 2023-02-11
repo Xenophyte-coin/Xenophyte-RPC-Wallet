@@ -163,11 +163,10 @@ namespace Xenophyte_Rpc_Wallet.Wallet
         public async Task<bool> InitlizationWalletConnectionAsync(string walletPhase, string walletPassword)
         {
             if (SeedNodeConnector == null)
-            {
                 SeedNodeConnector = new ClassSeedNodeConnector();
-            }
+            
 
-            if (!await SeedNodeConnector.StartConnectToSeedAsync(string.Empty, ClassConnectorSetting.SeedNodePort))
+            if (!await SeedNodeConnector.StartConnectToSeedAsync(null, ClassConnectorSetting.SeedNodePort))
             {
                 WalletCreateResult = ClassWalletCreatorEnumeration.WalletCreatorError;
                 return false;
