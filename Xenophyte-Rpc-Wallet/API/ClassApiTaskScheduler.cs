@@ -79,7 +79,7 @@ namespace Xenophyte_Rpc_Wallet.API
                                                     {
                                                         case ClassApiTaskType.API_TASK_TYPE_TRANSACTION:
                                                             bool anonymous = taskScheduled.Value.TaskWalletAnonymity == "1";
-                                                            string result = await ClassWalletUpdater.ProceedTransactionTokenRequestAsync(taskScheduled.Value.TaskWalletSrc, taskScheduled.Value.TaskWalletAmount, taskScheduled.Value.TaskWalletFee, taskScheduled.Value.TaskWalletDst, anonymous, ClassRpcDatabase.TradingKey);
+                                                            string result = await ClassWalletUpdater.ProceedTransactionTokenRequestAsync(taskScheduled.Value.TaskWalletSrc, taskScheduled.Value.TaskWalletAmount, taskScheduled.Value.TaskWalletFee, taskScheduled.Value.TaskWalletDst, anonymous);
                                                             var splitResult = result.Split(new[] { "|" }, StringSplitOptions.None);
                                                             if (splitResult[0] == ClassRpcWalletCommand.SendTokenTransactionConfirmed)
                                                             {

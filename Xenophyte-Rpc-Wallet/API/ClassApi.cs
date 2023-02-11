@@ -685,11 +685,10 @@ namespace Xenophyte_Rpc_Wallet.API
                                 var fee = splitPacket[3];
                                 var anonymousOption = splitPacket[4];
                                 var walletAddressTarget = splitPacket[5];
-                                var tradingKey = !string.IsNullOrEmpty(ClassRpcDatabase.TradingKey) ? ClassRpcDatabase.TradingKey : "";
 
                                 if (anonymousOption == "1")
                                 {
-                                    string result = await ClassWalletUpdater.ProceedTransactionTokenRequestAsync(walletAddressSource, amount, fee, walletAddressTarget, true, tradingKey);
+                                    string result = await ClassWalletUpdater.ProceedTransactionTokenRequestAsync(walletAddressSource, amount, fee, walletAddressTarget, true);
                                     var splitResult = result.Split(new[] { "|" }, StringSplitOptions.None);
                                     var sendTransactionJsonObject = new ClassApiJsonSendTransaction()
                                     {
@@ -718,7 +717,7 @@ namespace Xenophyte_Rpc_Wallet.API
                                     if (ClassRpcDatabase.RpcDatabaseContent.ContainsKey(walletAddressSource))
                                     {
 
-                                        string result = await ClassWalletUpdater.ProceedTransactionTokenRequestAsync(walletAddressSource, amount, fee, walletAddressTarget, false, tradingKey);
+                                        string result = await ClassWalletUpdater.ProceedTransactionTokenRequestAsync(walletAddressSource, amount, fee, walletAddressTarget, false);
                                         var splitResult = result.Split(new[] { "|" }, StringSplitOptions.None);
 
                                         var sendTransactionJsonObject = new ClassApiJsonSendTransaction()

@@ -53,11 +53,6 @@ namespace Xenophyte_Rpc_Wallet
                     ClassRpcDatabase.SetRpcDatabasePassword(ClassUtility.GetHiddenConsoleInput());
                 }
 
-
-                ClassConsole.ConsoleWriteLine("Please write your trading key if you are a listed exchange", ClassConsoleColorEnumeration.IndexConsoleRedLog, LogLevel);
-                ClassConsole.ConsoleWriteLine("This information help to identify transaction sources:", ClassConsoleColorEnumeration.IndexConsoleRedLog, LogLevel);
-                ClassRpcDatabase.TradingKey = Console.ReadLine();
-
                 ClassConsole.ConsoleWriteLine("RPC Wallet Database loading..", ClassConsoleColorEnumeration.IndexConsoleYellowLog, LogLevel);
                 while (!ClassRpcDatabase.LoadRpcDatabaseFile())
                 {
