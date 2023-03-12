@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -37,6 +37,7 @@ namespace Xenophyte_Rpc_Wallet.API
         public const string GetWholeWalletTransactionByRange = "get_whole_wallet_transaction_by_range"; // Get a selected transaction by a range selected and a wallet address selected.
         public const string GetWalletAnonymousTransaction = "get_wallet_anonymous_transaction"; // Get a selected anonymous transaction by an index selected and a wallet address selected.
         public const string GetWalletTransactionByHash = "get_wallet_transaction_by_hash"; // Get a selected transaction by a transaction hash selected and a wallet address selected.
+        public const string GetTransactionByHash = "get_transaction_by_hash"; // Get a transaction selected by hash.
         public const string SendTransactionByWalletAddress = "send_transaction_by_wallet_address"; // Sent a transaction from a selected wallet address.
         public const string SendTransferByWalletAddress = "send_transfer_by_wallet_address"; // Sent a transfer from a selected wallet address.
         public const string TaskSendTransaction = "task_send_transaction"; // Schedule a task for send a transaction.
@@ -1332,6 +1333,62 @@ namespace Xenophyte_Rpc_Wallet.API
                             else
                             {
                                 await BuildAndSendHttpPacketAsync(ClassApiEnumeration.WalletNotExist);
+                            }
+                            break;
+                        case ClassApiEnumeration.GetTransactionByHash:
+                            {
+                                bool found = false;
+
+                                foreach(string walletAddress in ClassRpcDatabase.RpcDatabaseContent.Keys.ToArray())
+                                {
+                                    if (_cancellationTokenSource.IsCancellationRequested)
+                                        break;
+
+                                    var transaction = ClassRpcDatabase.RpcDatabaseContent[walletAddress].GetWalletAnyTransactionSyncByHash(splitPacket[1]);
+                                    if (transaction != null)
+                                    {
+                                        found = true;
+                                        var splitTransaction = transaction.Item2.Split(new[] { "#" }, StringSplitOptions.None);
+
+                                        var transactionJsonObject = new ClassApiJsonTransaction()
+                                        {
+                                            index = (transaction.Item1 + 1),
+                                            wallet_address = walletAddress,
+                                            mode = splitTransaction[0],
+                                            type = splitTransaction[1],
+                                            hash = splitTransaction[2],
+                                            wallet_dst_or_src = splitTransaction[3],
+                                            amount = decimal.Parse(splitTransaction[4], NumberStyles.Currency, Program.GlobalCultureInfo),
+                                            fee = decimal.Parse(splitTransaction[5], NumberStyles.Currency, Program.GlobalCultureInfo),
+                                            timestamp_send = long.Parse(splitTransaction[6]),
+                                            timestamp_recv = long.Parse(splitTransaction[7]),
+                                            blockchain_height = splitTransaction[8]
+                                        };
+
+                                        string data = JsonConvert.SerializeObject(transactionJsonObject);
+                                        if (ClassRpcSetting.RpcWalletApiKeyRequestEncryption != string.Empty)
+                                        {
+                                            data = ClassAlgo.GetEncryptedResultManual(ClassAlgoEnumeration.Rijndael, data, ClassRpcSetting.RpcWalletApiKeyRequestEncryption, ClassWalletNetworkSetting.KeySize);
+                                        }
+                                        StringBuilder builder = new StringBuilder();
+                                        builder.AppendLine(@"HTTP/1.1 200 OK");
+                                        builder.AppendLine(@"Content-Type: text/plain");
+                                        builder.AppendLine(@"Content-Length: " + data.Length);
+                                        builder.AppendLine(@"Access-Control-Allow-Origin: *");
+                                        builder.AppendLine(@"");
+                                        builder.AppendLine(@"" + data);
+                                        await SendPacketAsync(builder.ToString());
+                                        builder.Clear();
+
+                                        break;
+                                    }
+                                    
+                                }
+                                
+                                if (!found || _cancellationTokenSource.IsCancellationRequested)
+                                {
+                                    await BuildAndSendHttpPacketAsync(ClassApiEnumeration.IndexNotExist);
+                                }
                             }
                             break;
                         default:
