@@ -41,40 +41,44 @@ namespace Xenophyte_Rpc_Wallet.Database
                 {
                     using (FileStream fs = File.Open(ClassUtility.ConvertPath(AppDomain.CurrentDomain.BaseDirectory + SyncDatabaseFile), FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                     {
-                        using (BufferedStream bs = new BufferedStream(fs))
+                        using (StreamWriter writer = new StreamWriter(ClassUtility.ConvertPath(AppDomain.CurrentDomain.BaseDirectory + SyncDatabaseFile + ".decoded")))
                         {
-                            using (StreamReader sr = new StreamReader(bs))
+                            using (BufferedStream bs = new BufferedStream(fs))
                             {
-                                string line;
-                                while ((line = sr.ReadLine()) != null)
+                                using (StreamReader sr = new StreamReader(bs))
                                 {
-                                    if (line.Contains(ClassSyncDatabaseEnumeration.DatabaseSyncStartLine))
+                                    string line;
+                                    while ((line = sr.ReadLine()) != null)
                                     {
-                                        string transactionLine = line.Replace(ClassSyncDatabaseEnumeration.DatabaseSyncStartLine, "");
-                                        var splitTransactionLine = transactionLine.Split(new[] { "|" }, StringSplitOptions.None);
-                                        string walletAddress = splitTransactionLine[0];
-                                        if (ClassRpcDatabase.RpcDatabaseContent.ContainsKey(walletAddress))
+                                        if (line.Contains(ClassSyncDatabaseEnumeration.DatabaseSyncStartLine))
                                         {
-                                            string transaction = ClassAlgo.GetDecryptedResultManual(ClassAlgoEnumeration.Rijndael, splitTransactionLine[1], walletAddress + ClassRpcDatabase.RpcDatabaseContent[walletAddress].GetWalletPublicKey(), ClassWalletNetworkSetting.KeySize);
-                                            transaction += "#" + walletAddress;
+                                            string transactionLine = line.Replace(ClassSyncDatabaseEnumeration.DatabaseSyncStartLine, "");
+                                            var splitTransactionLine = transactionLine.Split(new[] { "|" }, StringSplitOptions.None);
+                                            string walletAddress = splitTransactionLine[0];
+                                            if (ClassRpcDatabase.RpcDatabaseContent.ContainsKey(walletAddress))
+                                            {
+                                                string transaction = ClassAlgo.GetDecryptedResultManual(ClassAlgoEnumeration.Rijndael, splitTransactionLine[1], walletAddress + ClassRpcDatabase.RpcDatabaseContent[walletAddress].GetWalletPublicKey(), ClassWalletNetworkSetting.KeySize);
+                                                transaction += "#" + walletAddress;
 
-                                            var splitTransaction = transaction.Split(new[] { "#" }, StringSplitOptions.None);
-                                            if (splitTransaction[0] == ClassSyncDatabaseEnumeration.DatabaseAnonymousTransactionMode)
-                                                ClassRpcDatabase.RpcDatabaseContent[walletAddress].InsertWalletTransactionSync(transaction, true, false);
-                                            else
-                                                ClassRpcDatabase.RpcDatabaseContent[walletAddress].InsertWalletTransactionSync(transaction, false, false);
+                                                var splitTransaction = transaction.Split(new[] { "#" }, StringSplitOptions.None);
+                                                if (splitTransaction[0] == ClassSyncDatabaseEnumeration.DatabaseAnonymousTransactionMode)
+                                                    ClassRpcDatabase.RpcDatabaseContent[walletAddress].InsertWalletTransactionSync(transaction, true, false);
+                                                else
+                                                    ClassRpcDatabase.RpcDatabaseContent[walletAddress].InsertWalletTransactionSync(transaction, false, false);
 
-                                            if (!DatabaseTransactionSync.ContainsKey(transaction))
-                                                DatabaseTransactionSync.Add(transaction, long.Parse(splitTransaction[7]));
+                                                if (!DatabaseTransactionSync.ContainsKey(transaction))
+                                                    DatabaseTransactionSync.Add(transaction, long.Parse(splitTransaction[7]));
 
-                                            _totalTransactionRead++;
+                                                writer.WriteLine(transaction);
+                                                _totalTransactionRead++;
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
                     }
-                }
+                }   
             }
             catch
             {

@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Xenophyte")]
 [assembly: AssemblyProduct("Xenophyte RPC Wallet")]
-[assembly: AssemblyCopyright("Copyright © Xenophyte Developer  2023")]
+[assembly: AssemblyCopyright("Copyright © Xenophyte Developer  2024")]
 [assembly: AssemblyTrademark("Xenophyte")]
 [assembly: AssemblyCulture("")]
 
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // Vous pouvez spécifier toutes les valeurs ou indiquer les numéros de build et de révision par défaut
 // en utilisant '*', comme indiqué ci-dessous :
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("0.0.2.9")]
-[assembly: AssemblyFileVersion("0.0.2.9")]
+[assembly: AssemblyVersion("0.0.3.1")]
+[assembly: AssemblyFileVersion("0.0.3.1")]
